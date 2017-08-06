@@ -15,8 +15,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Scanner;
 
-
-
 import Entity.AFile;
 import Entity.User;
 
@@ -45,7 +43,7 @@ public class Client {
 	private User currentUser = null;
 
 	// 客户端文件存储地址
-	private static String fileLocation = "/User/sunjiazhao/Downloads/client_repository";
+	private static String fileLocation = "/Users/sunjiazhao/Downloads/client_repository";
 
 	// 打开选择器和主通道，进行相应的设置并将通道绑定到选择器上
 	public Client() throws IOException {
@@ -98,11 +96,7 @@ public class Client {
 		String password = console.next();
 		User newUser = new User(username, password);
 		String protocol = SIGNUP + PLACEHOLDER;
-		//待删
-		System.out.println("协议字段为：" + protocol);
 		Translator.write(mainChannel, protocol, newUser);
-		//待删
-		System.out.println("已将用户信息发送到通道中");
 		Thread.sleep(1000);
 	}
 
@@ -113,8 +107,6 @@ public class Client {
 		String password = console.next();
 		User tempUser = new User(username, password);
 		String protocol = LOGIN + PLACEHOLDER;
-		//待删
-		System.out.println("协议字段为：" + protocol);
 		Translator.write(mainChannel, protocol, tempUser);
 		Thread.sleep(1000);
 		if (isLogin) {
@@ -135,15 +127,17 @@ public class Client {
 					upload();
 				} catch (Exception e) {
 					System.out.println("上传时抛出异常");
-					e.printStackTrace();
+					//e.printStackTrace();
 				}
+				break;
 			case 2:
 				try {
 					download();
 				} catch (Exception e) {
 					System.out.println("下载时抛出异常");
-					e.printStackTrace();
+					//e.printStackTrace();
 				}
+				break;
 			case 3:
 				isLogin = false;
 				currentUser = null;
@@ -187,6 +181,7 @@ public class Client {
 			@SuppressWarnings("resource")
 			FileChannel inChannel = new FileInputStream(path).getChannel();
 			MappedByteBuffer buf = inChannel.map(MapMode.READ_ONLY, 0, inChannel.size());
+			
 			//启动显示进度的线程
 			GetCompleteRateThread rate = new GetCompleteRateThread(uploadChannel,inChannel.size());
 			rate.start();
@@ -230,6 +225,7 @@ public class Client {
 					System.out.println("请输入您要下载的文件名：");
 					String temp = console.next();
 					String[] fullName = AFile.split(temp);
+					file = new AFile(fullName[0],fullName[1]);
 				}while(!currentUser.hasFile(file));
 				break;
 			}catch(FileNotFoundException e){
@@ -244,7 +240,7 @@ public class Client {
 		 * 并获取该文件的文件通道
 		 */
 		FileUtil.createNewFile(path);
-		@SuppressWarnings("resource")
+		//@SuppressWarnings("resource")
 		FileChannel outChannel = new FileOutputStream(path).getChannel();
 		
 		/*
@@ -278,13 +274,13 @@ public class Client {
 				start = end;
 				currentSize += readPerSecond;
 				readPerSecond = 0L;
-				double rate = currentSize / size;
+				double rate = (double) currentSize / size;
 				System.out.println("已完成" + String.format("%.1f", rate * 100)+"%");
 			}
 		}//如果readPerSecond中还存在遗留字节
 		if(readPerSecond != 0L){
 			currentSize += readPerSecond;
-			double rate = currentSize / size;
+			double rate = (double) currentSize / size;
 			System.out.println("已完成" + String.format("%.1f", rate * 100) + "%");
 		}
 		System.out.println("下载完成！");
@@ -308,7 +304,7 @@ public class Client {
 		public void run(){
 			while(getCompleteRate(currentSize,fileSize)<1){
 				try{
-					currentSize = Translator.readLong(loadChannel);
+					currentSize += Translator.readLong(loadChannel);
 				}catch(IOException e){
 					e.printStackTrace();
 				}
@@ -321,7 +317,7 @@ public class Client {
 		}
 		
 		private double getCompleteRate(Long currentSize, Long fileSize){
-			double rate = currentSize / fileSize;
+			double rate = (double)currentSize/fileSize;
 			System.out.println("已完成" + String.format("%.1f", rate * 100) + "%");
 			return rate;
 		}		

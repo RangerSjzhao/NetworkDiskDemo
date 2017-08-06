@@ -77,6 +77,7 @@ public class SerializationHelper {
 		int lastIndex =0;
 		for(int i=0;i<byteArrays.length;i++){
 			System.arraycopy(byteArrays[i], 0, bytes, lastIndex, byteArrays[i].length);
+			lastIndex += byteArrays[i].length;
 		}
 		return bytes;
 	}

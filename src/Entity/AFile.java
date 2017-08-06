@@ -30,7 +30,7 @@ public class AFile implements Serializable {
 	}
 	
 	//供服务器端使用，该对象拥有完整的文件属性
-	public AFile(int id, String path, String name, String format){
+	public AFile(int id, String name, String format, String path){
 		this.id = id;
 		this.path = path;
 		this.name = name;

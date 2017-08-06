@@ -192,7 +192,7 @@ public class Translator {
 
 	// 传输用户对象和文件对象时，需要将字节信息拼接后一并发送，如果分开发送会导致客户端和服务器端无法同步并抛出异常
 	public static void write(SocketChannel channel, String protocol, User user) throws UnsupportedEncodingException {
-		byte[] protocolBytes = protocol.getBytes("Utf-8");
+		byte[] protocolBytes = protocol.getBytes();
 		//待删
 		System.out.println("协议字段的字节数为" + protocolBytes.length);
 		byte[] userBytes = SerializationHelper.objectToBytes(user);

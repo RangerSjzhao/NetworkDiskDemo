@@ -40,10 +40,9 @@ import static Service.NetDiskProtocol.*;
 import Service.Translator;
 import Util.DBUtil;
 import Util.FileUtil;
-//做了一些改动
 
 public class Server {
-	// Selector（选择器）是JavaNIO中能够检测一到多个NIO通道，并能够知晓通道是否为诸如读写事件做好准备的组。
+	// Selector（选择器）是JavaNIO中能够检测一到多个NIO通道，并能够知晓通道是否为诸如读写事件做好准备的组件。
 	// 这样，一个单独的线程可以管理多个channel，从而管理多个网络连接。
 	private Selector selector = null;
 	private ServerSocketChannel acceptor = null;
@@ -96,8 +95,6 @@ public class Server {
 						// 如果key失效，跳过本次循环
 						continue;
 					}
-					//待删
-					System.out.println("协议字段为：" + protocol);
 					
 					// 若没有读到协议字符则说明出现了未知错误
 					if (protocol == null) {
@@ -110,12 +107,8 @@ public class Server {
 						User user = Translator.readUser(key);
 						String username = user.getUsername();
 						User temp = getUser(username);
-						//待删
-						System.out.println("注册用户名：" + username);
 						if (temp == null) {
 							String password = user.getPassword();
-							//待删
-							System.out.println("注册用户密码：" + password);
 							
 							if (addUser(username, password)) {
 								Translator.write(mainChannel, SIGNUP
@@ -133,9 +126,11 @@ public class Server {
 						String username = user.getUsername();
 						User temp = getUser(username);
 						if (temp != null) {
+							String passwordOfDB = temp.getPassword();
+							//用户输入的登陆密码
 							String password = user.getPassword();
-							if (checkPassword(username, password)) {// 用户名和密码匹配
-								Translator.write(mainChannel, LOGIN + SUCCESS);
+							if (passwordOfDB.equals(password)) {// 用户名和密码匹配
+								Translator.write(mainChannel, LOGIN + SUCCESS,temp);
 							} else {
 								Translator.write(mainChannel, WRONG_PASSWORD
 										+ PLACEHOLDER);
@@ -329,15 +324,13 @@ public class Server {
 			// 从数据库中获得完整信息
 			file = getAFile(file.getName(), file.getFormat());
 			@SuppressWarnings("resource")
-			FileChannel inChannel =new FileInputStream(file.getPath())
-					.getChannel();
+			FileChannel inChannel =new FileInputStream(file.getPath()).getChannel();
 			Translator.write(loadChannel, inChannel.size());
-			MappedByteBuffer buf = inChannel.map(MapMode.READ_ONLY, 0,
-					inChannel.size());
+			MappedByteBuffer buf = inChannel.map(MapMode.READ_ONLY, 0,inChannel.size());
 			while (buf.hasRemaining()) {
 				loadChannel.write(buf);
 			}
-			inChannel.close();
+			loadChannel.shutdownOutput();
 		}
 
 	}
@@ -396,7 +389,7 @@ public class Server {
 				User user = new User(id, username, password);
 
 				// 获取用户的所有文件
-				String getFileSQL = "SELECT name,format FROM file INNER JOIN relation ON fid = id AND uid"
+				String getFileSQL = "SELECT name,format FROM file INNER JOIN relation ON fid = id AND uid ="
 						+ id;
 				pstmt = conn.prepareStatement(getFileSQL);
 				ResultSet fileRS = pstmt.executeQuery();
@@ -406,6 +399,7 @@ public class Server {
 					AFile file = new AFile(filename, format);
 					user.addFile(file);
 				}
+				return user;
 			} else {
 				return null;
 			}
